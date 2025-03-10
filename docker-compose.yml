@@ -1,0 +1,30 @@
+version: "3.9"
+services:
+  iris:
+    image: harbor.443916233c2349241f52.kpnappfactory.nl/hex/eoverdracht-admin:0.1.1-test
+    build:
+      context: ./iris
+      dockerfile: Dockerfile
+    volumes:
+      - ./iris/secret/iris.key:/home/irisowner/secret/iris.key
+      - ./iris/configmap/common.cpf:/home/irisowner/iris/configmap/common.cpf
+    environment:
+      - ISC_CPF_MERGE_FILE=/home/irisowner/iris/configmap/common.cpf
+    #  - ISC_DATA_DIRECTORY=/isc/data
+    command: 
+      - --key /home/irisowner/secret/iris.key
+      - --after iris session IRIS < /home/irisowner/iris/configmap/install.script
+    depends_on: 
+      - webgateway
+
+  webgateway:
+    hostname: webgateway
+    image: containers.intersystems.com/intersystems/webgateway:2024.3
+    ports:
+      - "80:80"
+    volumes:
+      - ./webgateway/csp/CSP.conf:/opt/webgateway/csp/CSP.conf
+      - ./webgateway/csp/CSP.ini:/opt/webgateway/csp/CSP.ini
+    environment:
+      - ISC_CSP_INI_FILE=/opt/webgateway/csp/CSP.ini
+      - ISC_CSP_CONF_FILE=/opt/webgateway/csp/CSP.conf

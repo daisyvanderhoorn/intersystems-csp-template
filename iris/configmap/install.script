@@ -1,0 +1,22 @@
+    set config = {}.%FromJSONFile("/home/irisowner/iris/configmap/install.json")
+    set namespace = config.namespace
+
+    zn "%SYS"
+
+    write "UnExpireUserPasswords in namespace %SYS through iris.script",!
+    do ##class(Security.Users).UnExpireUserPasswords("*")
+
+    set props("Directory") = "/usr/irissys/mgr"
+    set sc = ##class(Config.Databases).Create(namespace, .props)
+    if 'sc do $System.OBJ.DisplayError(sc), $System.Process.Terminate()
+    kill props
+    set props("Globals") = namespace
+    set props("Routines") = namespace
+    set props("Interop") = 1
+    set sc = ##class(Config.Namespaces).Create(namespace, .props)
+    if 'sc do $System.OBJ.DisplayError(sc), $System.Process.Terminate()
+
+    zn namespace
+    set sc = $System.OBJ.ImportDir("/tmp/main/iris/src", "*.inc;*.cls","ck-d",,1)
+    if 'sc do $System.OBJ.DisplayError(sc), $System.Process.Terminate()
+    halt
